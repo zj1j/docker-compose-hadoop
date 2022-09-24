@@ -1,0 +1,150 @@
+image:
+  repository: myharbor.com/bigdata/hadoop
+  tag: 3.3.2
+  pullPolicy: IfNotPresent
+
+# The version of the hadoop libraries being used in the image.
+hadoopVersion: 3.3.2
+logLevel: INFO
+
+# Select antiAffinity as either hard or soft, default is soft
+antiAffinity: "soft"
+
+hdfs:
+  nameNode:
+    pdbMinAvailable: 1
+
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+
+  dataNode:
+    # Will be used as dfs.datanode.hostname
+    # You still need to set up services + ingress for every DN
+    # Datanodes will expect to
+    externalHostname: example.com
+    externalDataPortRangeStart: 50500
+    externalHTTPPortRangeStart: 51000
+
+    replicas: 1
+
+    pdbMinAvailable: 1
+
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+
+  webhdfs:
+    enabled: true
+
+yarn:
+  resourceManager:
+    pdbMinAvailable: 1
+
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "10m"
+      limits:
+        memory: "2048Mi"
+        cpu: "2000m"
+
+  nodeManager:
+    pdbMinAvailable: 1
+
+    # The number of YARN NodeManager instances.
+    replicas: 1
+
+    # Create statefulsets in parallel (K8S 1.7+)
+    parallelCreate: false
+
+    # CPU and memory resources allocated to each node manager pod.
+    # This should be tuned to fit your workload.
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "500m"
+      limits:
+        memory: "2048Mi"
+        cpu: "1000m"
+
+persistence:
+  nameNode:
+    enabled: true
+    storageClass: "hadoop-nn-local-storage"
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    local:
+    - name: hadoop-nn-0
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/nn/data/data1"
+
+  dataNode:
+    enabled: true
+    storageClass: "hadoop-dn-local-storage"
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    local:
+    - name: hadoop-dn-0
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-1
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+    - name: hadoop-dn-2
+      host: "local-168-182-110"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+    - name: hadoop-dn-3
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-4
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+    - name: hadoop-dn-5
+      host: "local-168-182-111"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+    - name: hadoop-dn-6
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data1"
+    - name: hadoop-dn-7
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data2"
+    - name: hadoop-dn-8
+      host: "local-168-182-112"
+      path: "/opt/bigdata/servers/hadoop/dn/data/data3"
+
+service:
+  nameNode:
+    type: NodePort
+    ports:
+      dfs: 9000
+      webhdfs: 9870
+    nodePorts:
+      dfs: 30900
+      webhdfs: 30870
+  dataNode:
+    type: NodePort
+    ports:
+      dfs: 9000
+      webhdfs: 9864
+    nodePorts:
+      dfs: 30901
+      webhdfs: 30864
+  resourceManager:
+    type: NodePort
+    ports:
+      web: 8088
+    nodePorts:
+      web: 30088
+
+securityContext:
+  runAsUser: 9999
+  privileged: true
