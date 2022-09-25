@@ -58,7 +58,7 @@ spec:
           name: web
         command:
            - "/bin/bash"
-           - "/tmp/hadoop-config/bootstrap.sh"
+           - "/opt/apache/tmp/hadoop-config/bootstrap.sh"
            - "-d"
         resources:
 {{ toYaml .Values.yarn.nodeManager.resources | indent 10 }}
@@ -89,7 +89,7 @@ spec:
               divisor: 1M
         volumeMounts:
         - name: hadoop-config
-          mountPath: /tmp/hadoop-config
+          mountPath: /opt/apache/tmp/hadoop-config
         securityContext:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           privileged: {{ .Values.securityContext.privileged }}

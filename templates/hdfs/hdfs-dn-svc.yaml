@@ -10,10 +10,6 @@ metadata:
     app.kubernetes.io/component: hdfs-nn
 spec:
   ports:
-  - name: dfs
-    port: {{ .Values.service.dataNode.ports.dfs }}
-    protocol: TCP
-    nodePort: {{ .Values.service.dataNode.nodePorts.dfs }}
   - name: webhdfs
     port: {{ .Values.service.dataNode.ports.webhdfs }}
     nodePort: {{ .Values.service.dataNode.nodePorts.webhdfs }}

@@ -22,7 +22,7 @@ data:
     # Directory to find config artifacts
     # ------------------------------------------------------
 
-    CONFIG_DIR="/tmp/hadoop-config"
+    CONFIG_DIR="/opt/apache/tmp/hadoop-config"
 
     # ------------------------------------------------------
     # Copy config files from volume mount
@@ -36,7 +36,7 @@ data:
         exit 1
       fi
     done
-
+    
     # ------------------------------------------------------
     # installing libraries if any
     # (resource urls added comma separated to the ACP system variable)
@@ -51,7 +51,7 @@ data:
       sed -i "s/EXTERNAL_HTTP_PORT_REPLACEME/9864/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
       sed -i "s/EXTERNAL_DATA_PORT_REPLACEME/9866/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
 
-      mkdir -p /opt/apache/hdfs/namenode
+      mkdir -p /opt/apache/hdfs/namenode 
       if [ ! -f /opt/apache/hdfs/namenode/formated ]; then
         # Only format if necessary
         $HADOOP_HOME/bin/hdfs namenode -format -force -nonInteractive && echo 1 > /opt/apache/hdfs/namenode/formated
@@ -174,9 +174,16 @@ data:
         <value>false</value>
       </property>
 
+      <!--
       <property>
         <name>dfs.datanode.hostname</name>
         <value>{{ .Values.hdfs.dataNode.externalHostname }}</value>
+      </property>
+      -->
+
+      <property>
+        <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+        <value>false</value>
       </property>
 
       <property>
@@ -295,13 +302,13 @@ data:
       <property>
         <description>Where to store container logs.</description>
         <name>yarn.nodemanager.log-dirs</name>
-        <value>/opt/apache/log/hadoop-yarn/containers</value>
+        <value>/opt/apache/hadoop/logs/hadoop-yarn/containers</value>
       </property>
 
       <property>
         <description>Where to aggregate logs to.</description>
         <name>yarn.nodemanager.remote-app-log-dir</name>
-        <value>/opt/apache/log/hadoop-yarn/apps</value>
+        <value>/opt/apache/hadoop/logs/hadoop-yarn/apps</value>
       </property>
 
       <property>
@@ -319,3 +326,10 @@ data:
         </value>
       </property>
     </configuration>
+  dfs-hosts.includes: |
+    {{ include "hadoop.fullname" . }}-hdfs-dn-0.{{ include "hadoop.fullname" . }}-hdfs-dn.{{ .Release.Namespace }}.svc.cluster.local
+  dfs-hosts.excludes: |
+  yarn-hosts.includes: |
+    {{ include "hadoop.fullname" . }}-yarn-nm-0.{{ include "hadoop.fullname" . }}-yarn-nm.{{ .Release.Namespace }}.svc.cluster.local
+  yarn-hosts.excludes: |
+  

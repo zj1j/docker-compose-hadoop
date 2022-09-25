@@ -27,8 +27,8 @@ hdfs:
     # You still need to set up services + ingress for every DN
     # Datanodes will expect to
     externalHostname: example.com
-    externalDataPortRangeStart: 50500
-    externalHTTPPortRangeStart: 51000
+    externalDataPortRangeStart: 9866
+    externalHTTPPortRangeStart: 9864
 
     replicas: 1
 
@@ -133,10 +133,8 @@ service:
   dataNode:
     type: NodePort
     ports:
-      dfs: 9000
       webhdfs: 9864
     nodePorts:
-      dfs: 30901
       webhdfs: 30864
   resourceManager:
     type: NodePort
