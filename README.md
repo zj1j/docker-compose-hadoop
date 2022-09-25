@@ -14,8 +14,9 @@ This chart is primarily intended to be used for YARN and MapReduce job execution
 To install the chart with the release name `hadoop`:
 
 ```bash
-helm helm repo add pfisterer-hadoop https://pfisterer.github.io/apache-hadoop-helm/
-helm install --name hadoop pfisterer-hadoop/hadoop
+helm repo add apache-hadoop-helm https://pfisterer.github.io/apache-hadoop-helm/
+helm pull apache-hadoop-helm/hadoop --version 1.2.0
+helm install --name hadoop apache-hadoop-helm/hadoop --version 1.2.0
 ```
 
 ## Configuration
