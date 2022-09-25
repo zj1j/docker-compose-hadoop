@@ -142,6 +142,14 @@ service:
       web: 8088
     nodePorts:
       web: 30088
+  
+  journalNode:
+    type: ClusterIP
+    ports:
+      jn: 8485
+    nodePorts:
+      jn: ""
+    
 
 securityContext:
   runAsUser: 9999
