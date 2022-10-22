@@ -46,6 +46,10 @@ spec:
                   app.kubernetes.io/component: hdfs-dn
         {{- end }}
       terminationGracePeriodSeconds: 0
+      initContainers:
+      - name: init-nn
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: ['sh', '-c', "until curl -m 3 -sI http://{{ include "hadoop.fullname" . }}-hdfs-nn-{{ sub .Values.hdfs.nameNode.replicas 1 }}.{{ include "hadoop.fullname" . }}-hdfs-nn.{{ .Release.Namespace }}.svc.cluster.local:9870 | egrep --silent 'HTTP/1.1 200 OK|HTTP/1.1 302 Found'; do echo waiting for nn; sleep 1; done"]
       containers:
       - name: hdfs-dn
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -71,8 +75,10 @@ spec:
         volumeMounts:
         - name: hadoop-config
           mountPath: /opt/apache/tmp/hadoop-config
-        - name: dfs
-          mountPath: /opt/apache/hdfs/datanode
+        {{- range .Values.persistence.dataNode.volumes }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+        {{- end }}
         securityContext:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           privileged: {{ .Values.securityContext.privileged }}
@@ -80,29 +86,42 @@ spec:
       - name: hadoop-config
         configMap:
           name: {{ include "hadoop.fullname" . }}
-      {{- if .Values.persistence.dataNode.enabled }}
+      {{- if ne .Values.persistence.dataNode.enabledStorageClass true }}
+      {{- range .Values.persistence.dataNode.volumes }}
+      {{- if .hostPath }}
+      - name: {{ .name }}
+        hostPath:
+          path: {{ .hostPath }}
+          type: Directory
+      {{- end }}
+      {{- end }}
+      {{- end }}
+{{- if and .Values.persistence.dataNode.enabled .Values.persistence.dataNode.enabledStorageClass }}
   volumeClaimTemplates:
+  {{- range .Values.persistence.dataNode.volumes }}
   - metadata:
-      name: dfs
+      name: {{ .name }}
       labels:
-        app.kubernetes.io/name: {{ include "hadoop.name" . }}
-        helm.sh/chart: {{ include "hadoop.chart" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ include "hadoop.name" $ }}
+        helm.sh/chart: {{ include "hadoop.chart" $ }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
         app.kubernetes.io/component: hdfs-dn
     spec:
       accessModes:
-      - {{ .Values.persistence.dataNode.accessMode | quote }}
+      - {{ $.Values.persistence.dataNode.accessMode | quote }}
       resources:
         requests:
-          storage: {{ .Values.persistence.dataNode.size | quote }}
-    {{- if .Values.persistence.dataNode.storageClass }}
-    {{- if (eq "-" .Values.persistence.dataNode.storageClass) }}
+          storage: {{ $.Values.persistence.dataNode.size | quote }}
+    {{- if $.Values.persistence.dataNode.storageClass }}
+    {{- if (eq "-" $.Values.persistence.dataNode.storageClass) }}
       storageClassName: ""
     {{- else }}
-      storageClassName: "{{ .Values.persistence.dataNode.storageClass }}"
+      storageClassName: "{{ $.Values.persistence.dataNode.storageClass }}"
     {{- end }}
     {{- end }}
       {{- else }}
       - name: dfs
         emptyDir: {}
       {{- end }}
+{{- end }}
+

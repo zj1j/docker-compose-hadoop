@@ -46,12 +46,13 @@ data:
     # ------------------------------------------------------
     # Start NAMENODE
     # ------------------------------------------------------
+    sudo chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsUser }} /opt/apache/hdfs
     if [[ "${HOSTNAME}" =~ "hdfs-nn" ]]; then
       # sed command changing REPLACEME in $HADOOP_HOME/etc/hadoop/hdfs-site.xml to actual port numbers
-      sed -i "s/EXTERNAL_HTTP_PORT_REPLACEME/9864/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
-      sed -i "s/EXTERNAL_DATA_PORT_REPLACEME/9866/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+      #sed -i "s/EXTERNAL_HTTP_PORT_REPLACEME/9864/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+      #sed -i "s/EXTERNAL_DATA_PORT_REPLACEME/9866/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
 
-      mkdir -p /opt/apache/hdfs/namenode 
+      #mkdir -p /opt/apache/hdfs/namenode 
       if [ ! -f /opt/apache/hdfs/namenode/formated ]; then
         # Only format if necessary
         $HADOOP_HOME/bin/hdfs namenode -format -force -nonInteractive && echo 1 > /opt/apache/hdfs/namenode/formated
@@ -67,14 +68,14 @@ data:
       # Example hostname: hadoop-hadoop-hdfs-dn-0
       HOSTNAME_ARR=(${HOSTNAME//-/ })
       # Add instance number to start of external port ranges
-      EXTERNAL_HTTP_PORT=$(({{ .Values.hdfs.dataNode.externalHTTPPortRangeStart }} + ${HOSTNAME_ARR[4]}))
-      EXTERNAL_DATA_PORT=$(({{ .Values.hdfs.dataNode.externalDataPortRangeStart }} + ${HOSTNAME_ARR[4]}))
+      # EXTERNAL_HTTP_PORT=$(({{ .Values.hdfs.dataNode.externalHTTPPortRangeStart }} + ${HOSTNAME_ARR[4]}))
+      # EXTERNAL_DATA_PORT=$(({{ .Values.hdfs.dataNode.externalDataPortRangeStart }} + ${HOSTNAME_ARR[4]}))
 
       # sed command changing REPLACEME in $HADOOP_HOME/etc/hadoop/hdfs-site.xml to actual port numbers
-      sed -i "s/EXTERNAL_HTTP_PORT_REPLACEME/${EXTERNAL_HTTP_PORT}/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
-      sed -i "s/EXTERNAL_DATA_PORT_REPLACEME/${EXTERNAL_DATA_PORT}/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+      # sed -i "s/EXTERNAL_HTTP_PORT_REPLACEME/${EXTERNAL_HTTP_PORT}/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+      # sed -i "s/EXTERNAL_DATA_PORT_REPLACEME/${EXTERNAL_DATA_PORT}/" $HADOOP_HOME/etc/hadoop/hdfs-site.xml
 
-      mkdir -p /opt/apache/hdfs/datanode
+      # mkdir -p /opt/apache/hdfs/datanode{1..3}
 
       #  Wait (with timeout) for namenode
       TMP_URL="http://{{ include "hadoop.fullname" . }}-hdfs-nn:9870"
@@ -188,12 +189,12 @@ data:
 
       <property>
         <name>dfs.datanode.http.address</name>
-        <value>0.0.0.0:EXTERNAL_HTTP_PORT_REPLACEME</value>
+        <value>0.0.0.0:9864</value>
       </property>
 
       <property>
         <name>dfs.datanode.address</name>
-        <value>0.0.0.0:EXTERNAL_DATA_PORT_REPLACEME</value>
+        <value>0.0.0.0:9866</value>
       </property>
 
       <property>
@@ -203,7 +204,7 @@ data:
 
       <property>
         <name>dfs.datanode.data.dir</name>
-        <value>file:///opt/apache/hdfs/datanode</value>
+        <value>/opt/apache/hdfs/datanode1,/opt/apache/hdfs/datanode2,/opt/apache/hdfs/datanode3</value>
         <description>DataNode directory</description>
       </property>
 
@@ -333,3 +334,4 @@ data:
     {{ include "hadoop.fullname" . }}-yarn-nm-0.{{ include "hadoop.fullname" . }}-yarn-nm.{{ .Release.Namespace }}.svc.cluster.local
   yarn-hosts.excludes: |
   
+
